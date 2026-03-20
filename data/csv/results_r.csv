@@ -1,0 +1,23 @@
+,Abbreviation,TeamName,TeamId,FullName,CountryCode,Position,ClassifiedPosition,GridPosition,Time,Status,Points,Laps
+63,RUS,Mercedes,mercedes,George Russell,,1.0,1,1.0,0.0,Finished,25.0,58.0
+12,ANT,Mercedes,mercedes,Kimi Antonelli,,2.0,2,2.0,2.974,Finished,18.0,58.0
+16,LEC,Ferrari,ferrari,Charles Leclerc,,3.0,3,4.0,15.519,Finished,15.0,58.0
+44,HAM,Ferrari,ferrari,Lewis Hamilton,,4.0,4,7.0,16.144,Finished,12.0,58.0
+1,NOR,McLaren,mclaren,Lando Norris,,5.0,5,6.0,51.741,Finished,10.0,58.0
+3,VER,Red Bull Racing,red_bull,Max Verstappen,,6.0,6,20.0,54.617,Finished,8.0,58.0
+87,BEA,Haas F1 Team,haas,Oliver Bearman,,7.0,7,12.0,4.593,Lapped,6.0,57.0
+41,LIN,Racing Bulls,rb,Arvid Lindblad,,8.0,8,9.0,11.816,Lapped,4.0,57.0
+5,BOR,Audi,audi,Gabriel Bortoleto,,9.0,9,10.0,12.775,Lapped,2.0,57.0
+10,GAS,Alpine,alpine,Pierre Gasly,,10.0,10,14.0,29.027,Lapped,1.0,57.0
+31,OCO,Haas F1 Team,haas,Esteban Ocon,,11.0,11,13.0,29.85,Lapped,0.0,57.0
+23,ALB,Williams,williams,Alexander Albon,,12.0,12,15.0,56.075,Lapped,0.0,57.0
+30,LAW,Racing Bulls,rb,Liam Lawson,,13.0,13,8.0,57.173,Lapped,0.0,57.0
+43,COL,Alpine,alpine,Franco Colapinto,,14.0,14,16.0,8.487,Lapped,0.0,56.0
+55,SAI,Williams,williams,Carlos Sainz,,15.0,15,21.0,36.886,Lapped,0.0,56.0
+11,PER,Cadillac,cadillac,Sergio Perez,,16.0,16,18.0,7.85,Lapped,0.0,55.0
+18,STR,Aston Martin,aston_martin,Lance Stroll,,17.0,R,22.0,,Lapped,0.0,43.0
+14,ALO,Aston Martin,aston_martin,Fernando Alonso,,18.0,R,17.0,,Retired,0.0,21.0
+77,BOT,Cadillac,cadillac,Valtteri Bottas,,19.0,R,19.0,,Retired,0.0,15.0
+6,HAD,Red Bull Racing,red_bull,Isack Hadjar,,20.0,R,3.0,,Retired,0.0,10.0
+81,PIA,McLaren,mclaren,Oscar Piastri,,21.0,W,5.0,,Did not start,0.0,0.0
+27,HUL,Audi,audi,Nico Hulkenberg,,22.0,W,11.0,,Did not start,0.0,0.0
