@@ -76,8 +76,8 @@ def get_r_laps(year,gp):
      (r_laps["TrackStatus"] == "1") &
      (r_laps["LapTime"].notna()) &
      (r_laps["PitInTime"].isna()) &
-     (r_laps["PitOutTime"].isna())
-].copy()
+     (r_laps["PitOutTime"].isna())].copy()
+    
     r_laps['Time'] = r_laps['Time'].dt.total_seconds()
     r_laps['LapTime'] = r_laps['LapTime'].dt.total_seconds()
     r_laps['LapStartTime'] = r_laps['LapStartTime'].dt.total_seconds()
@@ -157,7 +157,6 @@ def get_q_laps(year, gp):
     q_laps.load(telemetry=False, weather=False, messages=False)
     q_laps = q_laps.laps.copy()
 
-    # Boolean filter αντί για loop
     q_laps = q_laps[q_laps["IsAccurate"] == True]
 
     # Timedelta conversions
