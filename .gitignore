@@ -211,3 +211,8 @@ log.txt
 output.txt
 mast.csv
 document_pdf.pdf
+
+# Data files
+data/
+*.csv
+*.parquet
