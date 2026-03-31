@@ -1,199 +1,112 @@
 import pandas as pd
 import numpy as np
 
-print("="*60)
-print("BUILDING CIRCUITS.CSV FROM YOUR DATA")
-print("="*60)
-
-# ============================================================
-# Step 1: Load your Phase 1 data to calculate REAL degradation
-# ============================================================
-print("\nStep 1: Loading your master tables...")
-
-try:
-    # Try 2024-2025 first (cleanest data)
-    master = pd.read_parquet('/Users/dimkostir/Desktop/Projects/f1-predictions/data/processed/master_tables/master_table_24_25.parquet')
-    print(f"✓ Loaded master_table_24_25.parquet: {master.shape}")
-    has_real_data = True
-except:
-    try:
-        # Fallback to final merged table
-        master = pd.read_parquet('/Users/dimkostir/Desktop/Projects/f1-predictions/data/processed/final_phase_01/final_phase_01.parquet')
-        print(f"✓ Loaded final_phase_01.parquet: {master.shape}")
-        has_real_data = True
-    except:
-        print("✗ Could not load master tables")
-        print("Using manual degradation estimates...")
-        has_real_data = False
-        master = None
-
-# ============================================================
-# Step 2: Calculate degradation severity from YOUR data
-# ============================================================
-if has_real_data and 'Deg_Rate_Weighted' in master.columns:
-    print("\nStep 2: Calculating degradation from YOUR race data...")
-    
-    # Filter out nulls and outliers
-    deg_data = master[master['Deg_Rate_Weighted'].notna()].copy()
-    
-    # Calculate per circuit
-    circuit_deg = deg_data.groupby('Location').agg({
-        'Deg_Rate_Weighted': ['mean', 'std', 'count']
-    }).reset_index()
-    
-    circuit_deg.columns = ['Location', 'avg_deg_rate', 'std_deg_rate', 'n_races']
-    
-    print(f"\nDegradation calculated for {len(circuit_deg)} circuits:")
-    print(circuit_deg.sort_values('avg_deg_rate', ascending=False)[['Location', 'avg_deg_rate', 'n_races']].head(10))
-    
-    # Normalize to 0-1
-    min_deg = circuit_deg['avg_deg_rate'].min()
-    max_deg = circuit_deg['avg_deg_rate'].max()
-    circuit_deg['deg_severity'] = (circuit_deg['avg_deg_rate'] - min_deg) / (max_deg - min_deg)
-    
-else:
-    print("\nStep 2: Using manual degradation estimates...")
-    circuit_deg = None
-
-# ============================================================
-# Step 3: Build circuit features from formula-timer.com data
-# ============================================================
-print("\nStep 3: Building circuit features...")
+# Circuit data based on formula-timer.com
+# Order matches Location list exactly
 
 circuits_data = {
-    'Location': [
-        'Sakhir', 'Jeddah', 'Melbourne', 'Shanghai', 'Suzuka',
-        'Miami', 'Imola', 'Monaco', 'Barcelona', 'Montreal',
-        'Spielberg', 'Silverstone', 'Spa', 'Budapest', 'Zandvoort',
-        'Monza', 'Baku', 'Singapore', 'Austin', 'Mexico City',
-        'Sao Paolo', 'Las Vegas', 'Lusail', 'Yas Marina'
-    ],
+    'Location': ["Melbourne", "Shanghai", "Suzuka", "Sakhir", "Jeddah",
+             "Miami", "Imola", "Monaco", "Barcelona", "Montreal", 
+             "Spielberg", "Silverstone", "Spa", "Budapest", "Zandvoort", 
+             "Monza", "Baku", "Singapore", "Austin", "Mexico City", "Sao Paolo", 
+             "Las Vegas", "Lusail", "Yas Marina"],
+
     'circuit_length': [
-        5412, 6174, 5278, 5451, 5807,
-        5412, 4909, 3337, 4675, 4361,
-        4318, 5891, 7004, 4381, 4259,
-        5793, 6003, 4940, 5513, 4304,
-        4309, 6120, 5380, 5281
+        5278, 5451, 5807, 5412, 6174,  # Melbourne, Shanghai, Suzuka, Sakhir, Jeddah
+        5412, 4909, 3337, 4675, 4361,  # Miami, Imola, Monaco, Barcelona, Montreal
+        4318, 5891, 7004, 4381, 4259,  # Spielberg, Silverstone, Spa, Budapest, Zandvoort
+        5793, 6003, 4940, 5513, 4304,  # Monza, Baku, Singapore, Austin, Mexico City
+        4309, 6120, 5380, 5281         # Sao Paolo, Las Vegas, Lusail, Yas Marina
     ],
     'num_corners': [
-        15, 27, 14, 16, 18,
-        19, 19, 19, 16, 14,
-        10, 18, 19, 14, 14,
-        11, 20, 23, 20, 17,
-        15, 17, 16, 21
+        14, 16, 18, 15, 27,  # Melbourne, Shanghai, Suzuka, Sakhir, Jeddah
+        19, 19, 19, 16, 14,  # Miami, Imola, Monaco, Barcelona, Montreal
+        10, 18, 19, 14, 14,  # Spielberg, Silverstone, Spa, Budapest, Zandvoort
+        11, 20, 23, 20, 17,  # Monza, Baku, Singapore, Austin, Mexico City
+        15, 17, 16, 21       # Sao Paolo, Las Vegas, Lusail, Yas Marina
     ],
     'num_drs_zones': [
-        3, 3, 3, 2, 2,
-        3, 2, 1, 2, 3,
-        3, 2, 2, 1, 2,
-        2, 2, 3, 2, 3,
-        2, 2, 2, 2
+        3, 2, 2, 3, 3,  # Melbourne, Shanghai, Suzuka, Sakhir, Jeddah
+        3, 2, 1, 2, 3,  # Miami, Imola, Monaco, Barcelona, Montreal
+        3, 2, 2, 1, 2,  # Spielberg, Silverstone, Spa, Budapest, Zandvoort
+        2, 2, 3, 2, 3,  # Monza, Baku, Singapore, Austin, Mexico City
+        2, 2, 2, 2      # Sao Paolo, Las Vegas, Lusail, Yas Marina
     ],
     'avg_speed_kmh': [
-        205, 252, 223, 205, 230,
-        223, 198, 160, 195, 220,
-        237, 240, 235, 195, 210,
-        263, 215, 172, 215, 217,
-        212, 240, 240, 195
+        223, 205, 230, 205, 252,  # Melbourne, Shanghai, Suzuka, Sakhir, Jeddah
+        223, 198, 160, 195, 220,  # Miami, Imola, Monaco, Barcelona, Montreal
+        237, 240, 235, 195, 210,  # Spielberg, Silverstone, Spa, Budapest, Zandvoort
+        263, 215, 172, 215, 217,  # Monza, Baku, Singapore, Austin, Mexico City
+        212, 240, 240, 195        # Sao Paolo, Las Vegas, Lusail, Yas Marina
     ],
     'safety_car_rate': [
-        0.08, 0.25, 0.15, 0.10, 0.12,
-        0.18, 0.20, 0.35, 0.10, 0.22,
-        0.15, 0.12, 0.18, 0.15, 0.20,
-        0.10, 0.40, 0.50, 0.15, 0.18,
-        0.25, 0.20, 0.15, 0.12
+        0.15, 0.10, 0.12, 0.08, 0.25,  # Melbourne, Shanghai, Suzuka, Sakhir, Jeddah
+        0.18, 0.20, 0.35, 0.10, 0.22,  # Miami, Imola, Monaco, Barcelona, Montreal
+        0.15, 0.12, 0.18, 0.15, 0.20,  # Spielberg, Silverstone, Spa, Budapest, Zandvoort
+        0.10, 0.40, 0.50, 0.15, 0.18,  # Monza, Baku, Singapore, Austin, Mexico City
+        0.25, 0.20, 0.15, 0.12         # Sao Paolo, Las Vegas, Lusail, Yas Marina
     ],
     'track_type': [
-        'permanent', 'street', 'permanent', 'permanent', 'permanent',
-        'street', 'permanent', 'street', 'permanent', 'semi-permanent',
-        'permanent', 'permanent', 'permanent', 'permanent', 'permanent',
-        'permanent', 'street', 'street', 'permanent', 'permanent',
-        'permanent', 'street', 'permanent', 'permanent'
+        'permanent', 'permanent', 'permanent', 'permanent', 'street',  # Melbourne, Shanghai, Suzuka, Sakhir, Jeddah
+        'street', 'permanent', 'street', 'permanent', 'semi-permanent',  # Miami, Imola, Monaco, Barcelona, Montreal
+        'permanent', 'permanent', 'permanent', 'permanent', 'permanent',  # Spielberg, Silverstone, Spa, Budapest, Zandvoort
+        'permanent', 'street', 'street', 'permanent', 'permanent',  # Monza, Baku, Singapore, Austin, Mexico City
+        'permanent', 'street', 'permanent', 'permanent'  # Sao Paolo, Las Vegas, Lusail, Yas Marina
     ]
 }
 
+# Create DataFrame
 circuits = pd.DataFrame(circuits_data)
 
-# ============================================================
-# Step 4: Calculate overtaking difficulty
-# ============================================================
-print("\nStep 4: Calculating overtaking difficulty...")
 
-# Formula: (DRS zones × circuit_length / avg_speed) / num_corners
-circuits['overtaking_score'] = (
-    circuits['num_drs_zones'] * (circuits['circuit_length'] / circuits['avg_speed_kmh']) / 
-    circuits['num_corners']
-)
+# Manual adjustments (based on F1 knowledge - https://formula-timer.com/circuit)
+# Scale: 0 = impossible, 1 = very easy
+circuits.loc[circuits['Location'] == 'Monaco', 'overtaking_ability'] = 0.05      # Nearly impossible
+circuits.loc[circuits['Location'] == 'Imola', 'overtaking_ability'] = 0.10       # Very hard (narrow)
+circuits.loc[circuits['Location'] == 'Singapore', 'overtaking_ability'] = 0.15   # Hard (narrow street)
+circuits.loc[circuits['Location'] == 'Budapest', 'overtaking_ability'] = 0.20    # Hard (twisty)
+circuits.loc[circuits['Location'] == 'Zandvoort', 'overtaking_ability'] = 0.25   # Hard (narrow, banked)
+circuits.loc[circuits['Location'] == 'Barcelona', 'overtaking_ability'] = 0.35   # Medium-hard
+circuits.loc[circuits['Location'] == 'Yas Marina', 'overtaking_ability'] = 0.40  # Medium
+circuits.loc[circuits['Location'] == 'Suzuka', 'overtaking_ability'] = 0.40      # Medium (fast, technical)
+circuits.loc[circuits['Location'] == 'Baku', 'overtaking_ability'] = 0.45        # Medium (long straight but narrow)
+circuits.loc[circuits['Location'] == 'Melbourne', 'overtaking_ability'] = 0.45   # Medium
+circuits.loc[circuits['Location'] == 'Las Vegas', 'overtaking_ability'] = 0.50   # Medium
+circuits.loc[circuits['Location'] == 'Austin', 'overtaking_ability'] = 0.55      # Medium-good
+circuits.loc[circuits['Location'] == 'Silverstone', 'overtaking_ability'] = 0.55 # Medium-good (fast corners)
+circuits.loc[circuits['Location'] == 'Shanghai', 'overtaking_ability'] = 0.58    # Good (longest DRS straight)
+circuits.loc[circuits['Location'] == 'Spielberg', 'overtaking_ability'] = 0.60   # Good (short track, 3 DRS)
+circuits.loc[circuits['Location'] == 'Lusail', 'overtaking_ability'] = 0.60      # Good
+circuits.loc[circuits['Location'] == 'Jeddah', 'overtaking_ability'] = 0.65      # Good (fast street circuit)
+circuits.loc[circuits['Location'] == 'Montreal', 'overtaking_ability'] = 0.65    # Good (Wall of Champions)
+circuits.loc[circuits['Location'] == 'Sakhir', 'overtaking_ability'] = 0.70      # Very good (3 DRS zones)
+circuits.loc[circuits['Location'] == 'Miami', 'overtaking_ability'] = 0.70       # Very good (wide, 3 DRS)
+circuits.loc[circuits['Location'] == 'Mexico City', 'overtaking_ability'] = 0.70 # Very good (altitude, long straight)
+circuits.loc[circuits['Location'] == 'Sao Paolo', 'overtaking_ability'] = 0.72   # Very good (sprint races)
+circuits.loc[circuits['Location'] == 'Spa', 'overtaking_ability'] = 0.75         # Easy (Kemmel straight)
+circuits.loc[circuits['Location'] == 'Monza', 'overtaking_ability'] = 0.85       # Very easy (temple of speed)
 
-# Normalize to 0-1
-min_score = circuits['overtaking_score'].min()
-max_score = circuits['overtaking_score'].max()
-circuits['overtaking_difficulty'] = (circuits['overtaking_score'] - min_score) / (max_score - min_score)
 
-# Manual adjustments for known extremes
-circuits.loc[circuits['Location'] == 'Monaco', 'overtaking_difficulty'] = 0.05
-circuits.loc[circuits['Location'] == 'Monza', 'overtaking_difficulty'] = 0.85
-circuits.loc[circuits['Location'] == 'Spa', 'overtaking_difficulty'] = 0.75
-circuits.loc[circuits['Location'] == 'Imola', 'overtaking_difficulty'] = 0.10
-circuits.loc[circuits['Location'] == 'Budapest', 'overtaking_difficulty'] = 0.20
-
-circuits = circuits.drop('overtaking_score', axis=1)
-
-# ============================================================
-# Step 5: Add degradation severity
-# ============================================================
-print("\nStep 5: Adding degradation severity...")
-
-if circuit_deg is not None:
-    # Use REAL data from your races
-    circuits = pd.merge(circuits, circuit_deg[['Location', 'deg_severity']], on='Location', how='left')
-    
-    # Fill missing with median
-    median_deg = circuits['deg_severity'].median()
-    circuits['deg_severity'] = circuits['deg_severity'].fillna(median_deg)
-    print(f"✓ Using YOUR race data for degradation (filled {circuits['deg_severity'].isna().sum()} missing with median)")
-    
-else:
-    # Fallback: manual estimates
-    deg_severity_manual = {
-        'Sakhir': 0.8, 'Jeddah': 0.5, 'Melbourne': 0.6, 'Shanghai': 0.5, 'Suzuka': 0.7,
-        'Miami': 0.6, 'Imola': 0.4, 'Monaco': 0.3, 'Barcelona': 0.7, 'Montreal': 0.5,
-        'Spielberg': 0.6, 'Silverstone': 0.8, 'Spa': 0.7, 'Budapest': 0.8, 'Zandvoort': 0.6,
-        'Monza': 0.4, 'Baku': 0.5, 'Singapore': 0.4, 'Austin': 0.7, 'Mexico City': 0.6,
-        'Sao Paolo': 0.6, 'Las Vegas': 0.3, 'Lusail': 0.6, 'Yas Marina': 0.5
-    }
-    circuits['deg_severity'] = circuits['Location'].map(deg_severity_manual)
-    print("✓ Using manual degradation estimates")
-
-# ============================================================
-# Step 6: Final cleanup and save
-# ============================================================
-print("\nStep 6: Finalizing...")
-
-# Reorder columns for readability
-circuits = circuits[[
-    'Location', 'circuit_length', 'num_corners', 'num_drs_zones',
-    'avg_speed_kmh', 'track_type', 'overtaking_difficulty',
-    'safety_car_rate', 'deg_severity'
-]]
-
-print("\n" + "="*60)
-print("FINAL CIRCUITS.CSV")
+# Verify alignment
 print("="*60)
-print(circuits)
+print("CIRCUIT DATA WITH OVERTAKING ABILITY")
+print("="*60)
+print(circuits[['Location', 'circuit_length', 'num_corners', 'avg_speed_kmh', 'overtaking_ability']])
 
-print("\nFeature ranges:")
-print(f"  circuit_length:         {circuits['circuit_length'].min()}-{circuits['circuit_length'].max()}m")
-print(f"  avg_speed_kmh:          {circuits['avg_speed_kmh'].min()}-{circuits['avg_speed_kmh'].max()} km/h")
-print(f"  overtaking_difficulty:  {circuits['overtaking_difficulty'].min():.2f}-{circuits['overtaking_difficulty'].max():.2f}")
-print(f"  safety_car_rate:        {circuits['safety_car_rate'].min():.2f}-{circuits['safety_car_rate'].max():.2f}")
-print(f"  deg_severity:           {circuits['deg_severity'].min():.2f}-{circuits['deg_severity'].max():.2f}")
+print("\nOvertaking ability range:")
+print(f"  Easiest: {circuits.loc[circuits['overtaking_ability'].idxmax(), 'Location']} ({circuits['overtaking_ability'].max():.2f})")
+print(f"  Hardest: {circuits.loc[circuits['overtaking_ability'].idxmin(), 'Location']} ({circuits['overtaking_ability'].min():.2f})")
 
-# Save
-output_path = '/Users/dimkostir/Desktop/Projects/f1-predictions/data/csv/circuits_csv/circuits.csv'
-circuits.to_csv(output_path, index=False)
-circuits.to_parquet('/Users/dimkostir/Desktop/Projects/f1-predictions/data/processed/circuits_parquet/circuits.parquet')
+# Save to CSV/Parquet
+circuits.to_csv('/Users/dimkostir/Desktop/Projects/f1-predictions/data/circuits_base.csv', index=False)
+circuits.to_parquet('/Users/dimkostir/Desktop/Projects/f1-predictions/data/processed/circuits_parquet/circuits_base.parquet', index= False)
 
-print("\nSaved!")
+new_master = pd.read_parquet('/Users/dimkostir/Desktop/Projects/f1-predictions/data/processed/final_phase_01/final_phase_01.parquet')
+new_master = pd.merge(new_master, circuits, on = 'Location', how = 'left')
 
-master
+new_master.to_csv('/Users/dimkostir/Desktop/Projects/f1-predictions/data/csv/final_phase_01/final_phase_01_circuits_added.csv')
+new_master.to_parquet('/Users/dimkostir/Desktop/Projects/f1-predictions/data/processed/final_phase_01/final_01_circuits.parquet', index= False)
+
+print(new_master)
+
+print("\n✅ circuits_base.csv created with overtaking_difficulty!")
