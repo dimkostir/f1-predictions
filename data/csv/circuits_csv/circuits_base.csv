@@ -1,0 +1,25 @@
+Location,circuit_length,num_corners,num_drs_zones,avg_speed_kmh,safety_car_rate,track_type,overtaking_difficulty
+Melbourne,5278,14,3,223,0.15,permanent,0.9097842052776673
+Shanghai,5451,16,2,205,0.1,permanent,0.5096197812983184
+Suzuka,5807,18,2,230,0.12,permanent,0.39092665124354203
+Sakhir,5412,15,3,205,0.08,permanent,0.9574593751102187
+Jeddah,6174,27,3,252,0.25,street,0.3719043523123219
+Miami,5412,19,3,223,0.18,street,0.62595711981324
+Imola,4909,19,2,198,0.2,permanent,0.1
+Monaco,3337,19,1,160,0.35,street,0.05
+Barcelona,4675,16,2,195,0.1,permanent,0.43476258631413445
+Montreal,4361,14,3,220,0.22,semi-permanent,0.7211399866147167
+Spielberg,4318,10,3,237,0.15,permanent,1.0
+Silverstone,5891,18,2,240,0.12,permanent,0.3730702054202673
+Spa,7004,19,2,235,0.18,permanent,0.75
+Budapest,4381,14,1,195,0.15,permanent,0.2
+Zandvoort,4259,14,2,210,0.2,permanent,0.4119802825238484
+Monza,5793,11,2,263,0.1,permanent,0.85
+Baku,6003,20,2,215,0.4,street,0.38789995554556195
+Singapore,4940,23,3,172,0.5,street,0.15
+Austin,5513,20,2,215,0.15,permanent,0.3357249479578481
+Mexico City,4304,17,3,217,0.18,permanent,0.5499929467801622
+Sao Paolo,4309,15,2,212,0.25,permanent,0.36912070303914857
+Las Vegas,6120,17,2,240,0.2,street,0.4354963400184358
+Lusail,5380,16,2,240,0.15,permanent,0.3901870487778296
+Yas Marina,5281,21,2,195,0.12,permanent,0.3391719489699661
